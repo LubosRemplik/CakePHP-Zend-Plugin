@@ -1,0 +1,22 @@
+h1. CakePHP Zend Plugin
+
+A CakePHP Plugin which works with Zend's classes
+http://framework.zend.com/
+
+h2. Usage
+
+Using plugin's component with controller
+
+bc. 
+var $uses = array('Zend.Zend');
+...
+$this->Zend->import('Json');
+$json_encoded_data = Zend_Json::encode($data);
+
+Using plugin's component anywhere
+
+bc. 
+App::import('Component', 'Zend.Zend');
+$Zend = new ZendComponent();
+$Zend->import('Json');
+$json_encoded_data = Zend_Json::encode($data);
