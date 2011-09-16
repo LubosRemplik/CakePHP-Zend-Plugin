@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_Amf
  * @subpackage Util
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: BinaryStream.php 20124 2010-01-07 17:59:01Z mabe $
+ * @version    $Id: BinaryStream.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /**
@@ -25,7 +25,7 @@
  *
  * @package    Zend_Amf
  * @subpackage Util
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Amf_Util_BinaryStream
@@ -53,7 +53,7 @@ class Zend_Amf_Util_BinaryStream
     /**
      * Constructor
      *
-     * Create a refrence to a byte stream that is going to be parsed or created
+     * Create a reference to a byte stream that is going to be parsed or created
      * by the methods in the class. Detect if the class should use big or
      * little Endian encoding.
      *

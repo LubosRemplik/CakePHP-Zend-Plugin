@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_Controller
  * @subpackage Dispatcher
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Standard.php 20244 2010-01-12 21:12:56Z matthew $
+ * @version    $Id: Standard.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /** Zend_Loader */
@@ -30,7 +30,7 @@ require_once 'Zend/Controller/Dispatcher/Abstract.php';
  * @category   Zend
  * @package    Zend_Controller
  * @subpackage Dispatcher
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Controller_Dispatcher_Standard extends Zend_Controller_Dispatcher_Abstract
@@ -206,7 +206,13 @@ class Zend_Controller_Dispatcher_Standard extends Zend_Controller_Dispatcher_Abs
             return false;
         }
 
-        if (class_exists($className, false)) {
+        $finalClass  = $className;
+        if (($this->_defaultModule != $this->_curModule)
+            || $this->getParam('prefixDefaultModule'))
+        {
+            $finalClass = $this->formatClassName($this->_curModule, $className);
+        }
+        if (class_exists($finalClass, false)) {
             return true;
         }
 

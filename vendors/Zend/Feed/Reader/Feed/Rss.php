@@ -14,9 +14,9 @@
  *
  * @category   Zend
  * @package    Zend_Feed_Reader
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Rss.php 20096 2010-01-06 02:05:09Z bkarwin $
+ * @version    $Id: Rss.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /**
@@ -47,7 +47,7 @@ require_once 'Zend/Feed/Reader/Collection/Author.php';
 /**
  * @category   Zend
  * @package    Zend_Feed_Reader
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Feed_Reader_Feed_Rss extends Zend_Feed_Reader_FeedAbstract
@@ -105,7 +105,7 @@ class Zend_Feed_Reader_Feed_Rss extends Zend_Feed_Reader_FeedAbstract
         if (array_key_exists('authors', $this->_data)) {
             return $this->_data['authors'];
         }
-        
+
         $authors = array();
         $authors_dc = $this->getExtension('DublinCore')->getAuthors();
         if (!empty($authors_dc)) {
@@ -139,7 +139,7 @@ class Zend_Feed_Reader_Feed_Rss extends Zend_Feed_Reader_FeedAbstract
                         $data['name'] = $matches[1];
                     }
                     $authors[] = $data;
-                } 
+                }
             }
         }
 
@@ -178,7 +178,7 @@ class Zend_Feed_Reader_Feed_Rss extends Zend_Feed_Reader_FeedAbstract
             $copyright = $this->_xpath->evaluate('string(/rss/channel/copyright)');
         }
 
-        if (!$copyright && !is_null($this->getExtension('DublinCore'))) {
+        if (!$copyright && $this->getExtension('DublinCore') !== null) {
             $copyright = $this->getExtension('DublinCore')->getCopyright();
         }
 
@@ -226,22 +226,27 @@ class Zend_Feed_Reader_Feed_Rss extends Zend_Feed_Reader_FeedAbstract
                 $dateModified = $this->_xpath->evaluate('string(/rss/channel/lastBuildDate)');
             }
             if ($dateModified) {
-                $dateStandards = array(Zend_Date::RSS, Zend_Date::RFC_822,
-                Zend_Date::RFC_2822, Zend_Date::DATES);
-                $date = new Zend_Date;
-                foreach ($dateStandards as $standard) {
-                    try {
-                        $date->set($dateModified, $standard);
-                        break;
-                    } catch (Zend_Date_Exception $e) {
-                        if ($standard == Zend_Date::DATES) {
-                            require_once 'Zend/Feed/Exception.php';
-                            throw new Zend_Feed_Exception(
-                                'Could not load date due to unrecognised'
-                                .' format (should follow RFC 822 or 2822):'
-                                . $e->getMessage(),
-                                0, $e
-                            );
+                $dateModifiedParsed = strtotime($dateModified);
+                if ($dateModifiedParsed) {
+                    $date = new Zend_Date($dateModifiedParsed);
+                } else {
+                    $dateStandards = array(Zend_Date::RSS, Zend_Date::RFC_822,
+                    Zend_Date::RFC_2822, Zend_Date::DATES);
+                    $date = new Zend_Date;
+                    foreach ($dateStandards as $standard) {
+                        try {
+                            $date->set($dateModified, $standard);
+                            break;
+                        } catch (Zend_Date_Exception $e) {
+                            if ($standard == Zend_Date::DATES) {
+                                require_once 'Zend/Feed/Exception.php';
+                                throw new Zend_Feed_Exception(
+                                    'Could not load date due to unrecognised'
+                                    .' format (should follow RFC 822 or 2822):'
+                                    . $e->getMessage(),
+                                    0, $e
+                                );
+                            }
                         }
                     }
                 }
@@ -266,6 +271,60 @@ class Zend_Feed_Reader_Feed_Rss extends Zend_Feed_Reader_FeedAbstract
     }
 
     /**
+     * Get the feed lastBuild date
+     *
+     * @return Zend_Date
+     */
+    public function getLastBuildDate()
+    {
+        if (array_key_exists('lastBuildDate', $this->_data)) {
+            return $this->_data['lastBuildDate'];
+        }
+
+        $lastBuildDate = null;
+        $date = null;
+
+        if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10 &&
+            $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
+            $lastBuildDate = $this->_xpath->evaluate('string(/rss/channel/lastBuildDate)');
+            if ($lastBuildDate) {
+                $lastBuildDateParsed = strtotime($lastBuildDate);
+                if ($lastBuildDateParsed) {
+                    $date = new Zend_Date($lastBuildDateParsed);
+                } else {
+                    $dateStandards = array(Zend_Date::RSS, Zend_Date::RFC_822,
+                    Zend_Date::RFC_2822, Zend_Date::DATES);
+                    $date = new Zend_Date;
+                    foreach ($dateStandards as $standard) {
+                        try {
+                            $date->set($lastBuildDate, $standard);
+                            break;
+                        } catch (Zend_Date_Exception $e) {
+                            if ($standard == Zend_Date::DATES) {
+                                require_once 'Zend/Feed/Exception.php';
+                                throw new Zend_Feed_Exception(
+                                    'Could not load date due to unrecognised'
+                                    .' format (should follow RFC 822 or 2822):'
+                                    . $e->getMessage(),
+                                    0, $e
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!$date) {
+            $date = null;
+        }
+
+        $this->_data['lastBuildDate'] = $date;
+
+        return $this->_data['lastBuildDate'];
+    }
+
+    /**
      * Get the feed description
      *
      * @return string|null
@@ -285,7 +344,7 @@ class Zend_Feed_Reader_Feed_Rss extends Zend_Feed_Reader_FeedAbstract
             $description = $this->_xpath->evaluate('string(/rdf:RDF/rss:channel/rss:description)');
         }
 
-        if (!$description && !is_null($this->getExtension('DublinCore'))) {
+        if (!$description && $this->getExtension('DublinCore') !== null) {
             $description = $this->getExtension('DublinCore')->getDescription();
         }
 
@@ -320,7 +379,7 @@ class Zend_Feed_Reader_Feed_Rss extends Zend_Feed_Reader_FeedAbstract
             $id = $this->_xpath->evaluate('string(/rss/channel/guid)');
         }
 
-        if (!$id && !is_null($this->getExtension('DublinCore'))) {
+        if (!$id && $this->getExtension('DublinCore') !== null) {
             $id = $this->getExtension('DublinCore')->getId();
         }
 
@@ -344,6 +403,60 @@ class Zend_Feed_Reader_Feed_Rss extends Zend_Feed_Reader_FeedAbstract
     }
 
     /**
+     * Get the feed image data
+     *
+     * @return array|null
+     */
+    public function getImage()
+    {
+        if (array_key_exists('image', $this->_data)) {
+            return $this->_data['image'];
+        }
+
+        if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10 &&
+            $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
+            $list = $this->_xpath->query('/rss/channel/image');
+            $prefix = '/rss/channel/image[1]';
+        } else {
+            $list = $this->_xpath->query('/rdf:RDF/rss:channel/rss:image');
+            $prefix = '/rdf:RDF/rss:channel/rss:image[1]';
+        }
+        if ($list->length > 0) {
+            $image = array();
+            $value = $this->_xpath->evaluate('string(' . $prefix . '/url)');
+            if ($value) {
+                $image['uri'] = $value;
+            }
+            $value = $this->_xpath->evaluate('string(' . $prefix . '/link)');
+            if ($value) {
+                $image['link'] = $value;
+            }
+            $value = $this->_xpath->evaluate('string(' . $prefix . '/title)');
+            if ($value) {
+                $image['title'] = $value;
+            }
+            $value = $this->_xpath->evaluate('string(' . $prefix . '/height)');
+            if ($value) {
+                $image['height'] = $value;
+            }
+            $value = $this->_xpath->evaluate('string(' . $prefix . '/width)');
+            if ($value) {
+                $image['width'] = $value;
+            }
+            $value = $this->_xpath->evaluate('string(' . $prefix . '/description)');
+            if ($value) {
+                $image['description'] = $value;
+            }
+        } else {
+            $image = null;
+        }
+
+        $this->_data['image'] = $image;
+
+        return $this->_data['image'];
+    }
+
+    /**
      * Get the feed language
      *
      * @return string|null
@@ -361,7 +474,7 @@ class Zend_Feed_Reader_Feed_Rss extends Zend_Feed_Reader_FeedAbstract
             $language = $this->_xpath->evaluate('string(/rss/channel/language)');
         }
 
-        if (!$language && !is_null($this->getExtension('DublinCore'))) {
+        if (!$language && $this->getExtension('DublinCore') !== null) {
             $language = $this->getExtension('DublinCore')->getLanguage();
         }
 
@@ -430,8 +543,8 @@ class Zend_Feed_Reader_Feed_Rss extends Zend_Feed_Reader_FeedAbstract
 
         $link = $this->getExtension('Atom')->getFeedLink();
 
-        if (!$link) {
-            $link = null;
+        if ($link === null || empty($link)) {
+            $link = $this->getOriginalSourceUri();
         }
 
         $this->_data['feedlink'] = $link;
@@ -463,9 +576,6 @@ class Zend_Feed_Reader_Feed_Rss extends Zend_Feed_Reader_FeedAbstract
                 $generator = $this->_xpath->evaluate('string(/rss/channel/atom:generator)');
             } else {
                 $generator = $this->_xpath->evaluate('string(/rdf:RDF/rss:channel/atom:generator)');
-            }
-            if ($generator) {
-                $generator = html_entity_decode($generator, ENT_QUOTES, $this->getEncoding());
             }
         }
 
@@ -502,7 +612,7 @@ class Zend_Feed_Reader_Feed_Rss extends Zend_Feed_Reader_FeedAbstract
             $title = $this->_xpath->evaluate('string(/rdf:RDF/rss:channel/rss:title)');
         }
 
-        if (!$title && !is_null($this->getExtension('DublinCore'))) {
+        if (!$title && $this->getExtension('DublinCore') !== null) {
             $title = $this->getExtension('DublinCore')->getTitle();
         }
 
@@ -542,7 +652,7 @@ class Zend_Feed_Reader_Feed_Rss extends Zend_Feed_Reader_FeedAbstract
 
         return $this->_data['hubs'];
     }
-    
+
     /**
      * Get all categories
      *
@@ -573,7 +683,7 @@ class Zend_Feed_Reader_Feed_Rss extends Zend_Feed_Reader_FeedAbstract
         } else {
             $categoryCollection = $this->getExtension('DublinCore')->getCategories();
         }
-        
+
         if (count($categoryCollection) == 0) {
             $categoryCollection = $this->getExtension('Atom')->getCategories();
         }

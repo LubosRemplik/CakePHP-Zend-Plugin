@@ -14,9 +14,9 @@
  *
  * @category   Zend
  * @package    Zend_Feed_Reader
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Rss.php 20096 2010-01-06 02:05:09Z bkarwin $
+ * @version    $Id: Rss.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /**
@@ -77,7 +77,7 @@ require_once 'Zend/Feed/Reader/Collection/Category.php';
 /**
  * @category   Zend
  * @package    Zend_Feed_Reader
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Feed_Reader_Entry_Rss extends Zend_Feed_Reader_EntryAbstract implements Zend_Feed_Reader_EntryInterface
@@ -159,7 +159,7 @@ class Zend_Feed_Reader_Entry_Rss extends Zend_Feed_Reader_EntryAbstract implemen
         if (array_key_exists('authors', $this->_data)) {
             return $this->_data['authors'];
         }
-        
+
         $authors = array();
         $authors_dc = $this->getExtension('DublinCore')->getAuthors();
         if (!empty($authors_dc)) {
@@ -169,7 +169,7 @@ class Zend_Feed_Reader_Entry_Rss extends Zend_Feed_Reader_EntryAbstract implemen
                 );
             }
         }
-        
+
         if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10
         && $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
             $list = $this->_xpath->query($this->_xpathQueryRss . '//author');
@@ -189,7 +189,7 @@ class Zend_Feed_Reader_Entry_Rss extends Zend_Feed_Reader_EntryAbstract implemen
                         $data['name'] = $matches[1];
                     }
                     $authors[] = $data;
-                } 
+                }
             }
         }
 
@@ -265,22 +265,27 @@ class Zend_Feed_Reader_Entry_Rss extends Zend_Feed_Reader_EntryAbstract implemen
         ) {
             $dateModified = $this->_xpath->evaluate('string('.$this->_xpathQueryRss.'/pubDate)');
             if ($dateModified) {
-                $dateStandards = array(Zend_Date::RSS, Zend_Date::RFC_822,
-                Zend_Date::RFC_2822, Zend_Date::DATES);
-                $date = new Zend_Date;
-                foreach ($dateStandards as $standard) {
-                    try {
-                        $date->set($dateModified, $standard);
-                        break;
-                    } catch (Zend_Date_Exception $e) {
-                        if ($standard == Zend_Date::DATES) {
-                            require_once 'Zend/Feed/Exception.php';
-                            throw new Zend_Feed_Exception(
-                                'Could not load date due to unrecognised'
-                                .' format (should follow RFC 822 or 2822):'
-                                . $e->getMessage(),
-                                0, $e
-                            );
+                $dateModifiedParsed = strtotime($dateModified);
+                if ($dateModifiedParsed) {
+                    $date = new Zend_Date($dateModifiedParsed);
+                } else {
+                    $dateStandards = array(Zend_Date::RSS, Zend_Date::RFC_822,
+                    Zend_Date::RFC_2822, Zend_Date::DATES);
+                    $date = new Zend_Date;
+                    foreach ($dateStandards as $standard) {
+                        try {
+                            $date->set($dateModified, $standard);
+                            break;
+                        } catch (Zend_Date_Exception $e) {
+                            if ($standard == Zend_Date::DATES) {
+                                require_once 'Zend/Feed/Exception.php';
+                                throw new Zend_Feed_Exception(
+                                    'Could not load date due to unrecognised'
+                                    .' format (should follow RFC 822 or 2822):'
+                                    . $e->getMessage(),
+                                    0, $e
+                                );
+                            }
                         }
                     }
                 }
@@ -335,8 +340,6 @@ class Zend_Feed_Reader_Entry_Rss extends Zend_Feed_Reader_EntryAbstract implemen
 
         if (!$description) {
             $description = null;
-        } else {
-            $description = html_entity_decode($description, ENT_QUOTES, $this->getEncoding());
         }
 
         $this->_data['description'] = $description;
@@ -469,7 +472,7 @@ class Zend_Feed_Reader_Entry_Rss extends Zend_Feed_Reader_EntryAbstract implemen
 
         return $this->_data['links'];
     }
-    
+
     /**
      * Get all categories
      *
@@ -500,7 +503,7 @@ class Zend_Feed_Reader_Entry_Rss extends Zend_Feed_Reader_EntryAbstract implemen
         } else {
             $categoryCollection = $this->getExtension('DublinCore')->getCategories();
         }
-        
+
         if (count($categoryCollection) == 0) {
             $categoryCollection = $this->getExtension('Atom')->getCategories();
         }

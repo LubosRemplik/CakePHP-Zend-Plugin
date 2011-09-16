@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_View
  * @subpackage Helper
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: FormSubmit.php 20096 2010-01-06 02:05:09Z bkarwin $
+ * @version    $Id: FormSubmit.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 
@@ -33,7 +33,7 @@ require_once 'Zend/View/Helper/FormElement.php';
  * @category   Zend
  * @package    Zend_View
  * @subpackage Helper
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_View_Helper_FormSubmit extends Zend_View_Helper_FormElement
@@ -56,12 +56,15 @@ class Zend_View_Helper_FormSubmit extends Zend_View_Helper_FormElement
     public function formSubmit($name, $value = null, $attribs = null)
     {
         $info = $this->_getInfo($name, $value, $attribs);
-        extract($info); // name, value, attribs, options, listsep, disable
-
+        extract($info); // name, value, attribs, options, listsep, disable, id
         // check if disabled
         $disabled = '';
         if ($disable) {
             $disabled = ' disabled="disabled"';
+        }
+
+        if ($id) {
+            $id = ' id="' . $this->view->escape($id) . '"';
         }
 
         // XHTML or HTML end tag?
@@ -73,7 +76,7 @@ class Zend_View_Helper_FormSubmit extends Zend_View_Helper_FormElement
         // Render the button.
         $xhtml = '<input type="submit"'
                . ' name="' . $this->view->escape($name) . '"'
-               . ' id="' . $this->view->escape($id) . '"'
+               . $id
                . ' value="' . $this->view->escape($value) . '"'
                . $disabled
                . $this->_htmlAttribs($attribs)

@@ -14,9 +14,9 @@
  *
  * @category   Zend
  * @package    Zend_Pdf
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Proxy.php 20096 2010-01-06 02:05:09Z bkarwin $
+ * @version    $Id: Proxy.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /** Zend_Pdf_ElementFactory_Interface */
@@ -27,7 +27,7 @@ require_once 'Zend/Pdf/ElementFactory/Interface.php';
  * Responsibility is to log PDF changes
  *
  * @package    Zend_Pdf
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Pdf_ElementFactory_Proxy implements Zend_Pdf_ElementFactory_Interface
@@ -54,6 +54,16 @@ class Zend_Pdf_ElementFactory_Proxy implements Zend_Pdf_ElementFactory_Interface
     {
         $this->_factory->close();
         $this->_factory = null;
+    }
+
+    /**
+     * Get factory
+     *
+     * @return Zend_Pdf_ElementFactory_Interface
+     */
+    public function getFactory()
+    {
+        return $this->_factory->getFactory();
     }
 
     /**

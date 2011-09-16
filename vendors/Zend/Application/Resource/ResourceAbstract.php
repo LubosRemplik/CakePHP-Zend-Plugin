@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_Application
  * @subpackage Resource
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: ResourceAbstract.php 20096 2010-01-06 02:05:09Z bkarwin $
+ * @version    $Id: ResourceAbstract.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /**
@@ -32,7 +32,7 @@ require_once 'Zend/Application/Resource/Resource.php';
  * @category   Zend
  * @package    Zend_Application
  * @subpackage Resource
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 abstract class Zend_Application_Resource_ResourceAbstract implements Zend_Application_Resource_Resource
@@ -83,6 +83,11 @@ abstract class Zend_Application_Resource_ResourceAbstract implements Zend_Applic
      */
     public function setOptions(array $options)
     {
+        if (array_key_exists('bootstrap', $options)) {
+            $this->setBootstrap($options['bootstrap']);
+            unset($options['bootstrap']);
+        }
+
         foreach ($options as $key => $value) {
             if (in_array(strtolower($key), $this->_skipOptions)) {
                 continue;
@@ -91,9 +96,6 @@ abstract class Zend_Application_Resource_ResourceAbstract implements Zend_Applic
             $method = 'set' . strtolower($key);
             if (method_exists($this, $method)) {
                 $this->$method($value);
-            }
-            if ('bootstrap' === $key) {
-                unset($options[$key]);
             }
         }
 

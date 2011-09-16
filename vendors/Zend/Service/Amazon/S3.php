@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Amazon_S3
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: S3.php 20096 2010-01-06 02:05:09Z bkarwin $
+ * @version    $Id: S3.php 24083 2011-05-30 10:52:55Z ezimuel $
  */
 
 /**
@@ -36,7 +36,7 @@ require_once 'Zend/Crypt/Hmac.php';
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Amazon_S3
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @see        http://docs.amazonwebservices.com/AmazonS3/2006-03-01/
  */
@@ -157,14 +157,15 @@ class Zend_Service_Amazon_S3 extends Zend_Service_Amazon_Abstract
     public function createBucket($bucket, $location = null)
     {
         $this->_validBucketName($bucket);
-
+        $headers=array();
         if($location) {
             $data = '<CreateBucketConfiguration><LocationConstraint>'.$location.'</LocationConstraint></CreateBucketConfiguration>';
-        }
-        else {
+            $headers['Content-type']= 'text/plain';
+            $headers['Contne-size']= strlen($data);
+        } else {
             $data = null;
         }
-        $response = $this->_makeRequest('PUT', $bucket, null, array(), $data);
+        $response = $this->_makeRequest('PUT', $bucket, null, $headers, $data);
 
         return ($response->getStatus() == 200);
     }
@@ -190,6 +191,7 @@ class Zend_Service_Amazon_S3 extends Zend_Service_Amazon_Abstract
      */
     public function isObjectAvailable($object)
     {
+        $object = $this->_fixupObjectName($object);
         $response = $this->_makeRequest('HEAD', $object);
 
         return ($response->getStatus() == 200);
@@ -272,9 +274,16 @@ class Zend_Service_Amazon_S3 extends Zend_Service_Amazon_Abstract
             return false;
         }
 
-        foreach ($objects as $object) {
-            $this->removeObject("$bucket/$object");
+        while (!empty($objects)) {
+            foreach ($objects as $object) {
+                $this->removeObject("$bucket/$object");
+            }
+            $params= array (
+                'marker' => $objects[count($objects)-1]
+            );
+            $objects = $this->getObjectsByBucket($bucket,$params);
         }
+        
         return true;
     }
 
@@ -503,13 +512,64 @@ class Zend_Service_Amazon_S3 extends Zend_Service_Amazon_Abstract
     }
 
     /**
+     * Copy an object
+     *
+     * @param  string $sourceObject  Source object name
+     * @param  string $destObject    Destination object name
+     * @param  array  $meta          (OPTIONAL) Metadata to apply to desination object.
+     *                               Set to null to copy metadata from source object.
+     * @return boolean
+     */
+    public function copyObject($sourceObject, $destObject, $meta = null)
+    {
+        $sourceObject = $this->_fixupObjectName($sourceObject);
+        $destObject   = $this->_fixupObjectName($destObject);
+
+        $headers = (is_array($meta)) ? $meta : array();
+        $headers['x-amz-copy-source'] = $sourceObject;
+        $headers['x-amz-metadata-directive'] = $meta === null ? 'COPY' : 'REPLACE';
+
+        $response = $this->_makeRequest('PUT', $destObject, null, $headers);
+
+        if ($response->getStatus() == 200 && !stristr($response->getBody(), '<Error>')) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Move an object
+     *
+     * Performs a copy to dest + verify + remove source
+     *
+     * @param string $sourceObject  Source object name
+     * @param string $destObject    Destination object name
+     * @param array  $meta          (OPTIONAL) Metadata to apply to destination object.
+     *                              Set to null to retain existing metadata.
+     */
+    public function moveObject($sourceObject, $destObject, $meta = null)
+    {
+        $sourceInfo = $this->getInfo($sourceObject);
+
+        $this->copyObject($sourceObject, $destObject, $meta);
+        $destInfo = $this->getInfo($destObject);
+
+        if ($sourceInfo['etag'] === $destInfo['etag']) {
+            return $this->removeObject($sourceObject);
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Make a request to Amazon S3
      *
-     * @param  string $method	Request method
-     * @param  string $path		Path to requested object
-     * @param  array  $params	Request parameters
-     * @param  array  $headers	HTTP headers
-     * @param  string|resource $data		Request data
+     * @param  string $method    Request method
+     * @param  string $path        Path to requested object
+     * @param  array  $params    Request parameters
+     * @param  array  $headers    HTTP headers
+     * @param  string|resource $data        Request data
      * @return Zend_Http_Response
      */
     public function _makeRequest($method, $path='', $params=null, $headers=array(), $data=null)
@@ -538,7 +598,11 @@ class Zend_Service_Amazon_S3 extends Zend_Service_Amazon_Abstract
             $endpoint->setHost($parts[0].'.'.$endpoint->getHost());
         }
         if (!empty($parts[1])) {
-            $endpoint->setPath('/'.$parts[1]);
+            // ZF-10218, ZF-10122
+            $pathparts = explode('?',$parts[1]);
+            $endpath = $pathparts[0];
+            $endpoint->setPath('/'.$endpath);
+            
         }
         else {
             $endpoint->setPath('/');
@@ -546,21 +610,24 @@ class Zend_Service_Amazon_S3 extends Zend_Service_Amazon_Abstract
                 $path = $parts[0].'/';
             }
         }
-
         self::addSignature($method, $path, $headers);
 
         $client = self::getHttpClient();
 
-        $client->resetParameters();
+        $client->resetParameters(true);
         $client->setUri($endpoint);
         $client->setAuth(false);
         // Work around buglet in HTTP client - it doesn't clean headers
         // Remove when ZHC is fixed
-        $client->setHeaders(array('Content-MD5' => null,
-                                  'Expect'      => null,
-                                  'Range'       => null,
-                                  'x-amz-acl'   => null));
-
+        /*
+        $client->setHeaders(array('Content-MD5'              => null,
+                                  'Content-Encoding'         => null,
+                                  'Expect'                   => null,
+                                  'Range'                    => null,
+                                  'x-amz-acl'                => null,
+                                  'x-amz-copy-source'        => null,
+                                  'x-amz-metadata-directive' => null));
+        */
         $client->setHeaders($headers);
 
         if (is_array($params)) {
@@ -574,7 +641,7 @@ class Zend_Service_Amazon_S3 extends Zend_Service_Amazon_Abstract
                  $headers['Content-type'] = self::getMimeType($path);
              }
              $client->setRawData($data, $headers['Content-type']);
-         }
+         } 
          do {
             $retry = false;
 
@@ -664,6 +731,9 @@ class Zend_Service_Amazon_S3 extends Zend_Service_Amazon_Abstract
         }
         else if (strpos($path, '?torrent') !== false) {
             $sig_str .= '?torrent';
+        }
+        else if (strpos($path, '?versions') !== false) {
+            $sig_str .= '?versions';
         }
 
         $signature = base64_encode(Zend_Crypt_Hmac::compute($this->_getSecretKey(), 'sha1', utf8_encode($sig_str), Zend_Crypt_Hmac::BINARY));

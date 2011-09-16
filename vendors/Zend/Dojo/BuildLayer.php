@@ -14,16 +14,16 @@
  *
  * @category   Zend
  * @package    Zend_Dojo
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: BuildLayer.php 20096 2010-01-06 02:05:09Z bkarwin $
+ * @version    $Id: BuildLayer.php 23953 2011-05-03 05:47:39Z ralph $
  */
 
 /**
  * Dojo module layer and custom build profile generation support
  *
  * @package    Zend_Dojo
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Dojo_BuildLayer
@@ -498,9 +498,9 @@ class Zend_Dojo_BuildLayer
 
         $profile = $profileOptions;
         $profile['layers'] = array(array(
-            'name' => $layerScriptPath,
+            'name'              => $layerScriptPath,
             'layerDependencies' => array(),
-            'dependencies' => array($layerName),
+            'dependencies'      => array($layerName),
         ));
         $profile['prefixes'] = array_values($profilePrefixes);
 
@@ -529,7 +529,7 @@ class Zend_Dojo_BuildLayer
     {
         require_once 'Zend/Json.php';
         $profile = Zend_Json::encode($profile);
-        $profile = preg_replace('/"([^"]*)":/', '$1:', $profile);
+        $profile = trim($profile, '"');
         $profile = preg_replace('/' . preg_quote('\\') . '/', '', $profile);
         return $profile;
     }

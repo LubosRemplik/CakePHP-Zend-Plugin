@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_Markup
  * @subpackage Renderer
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: RendererAbstract.php 20956 2010-02-06 17:58:58Z kokx $
+ * @version    $Id: RendererAbstract.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /**
@@ -39,7 +39,7 @@ require_once 'Zend/Markup/Renderer/TokenConverterInterface.php';
  * @category   Zend
  * @package    Zend_Markup
  * @subpackage Renderer
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 abstract class Zend_Markup_Renderer_RendererAbstract
@@ -131,9 +131,6 @@ abstract class Zend_Markup_Renderer_RendererAbstract
         if (isset($options['parser'])) {
             $this->setParser($options['parser']);
         }
-        if (isset($options['useDefaultTags']) && ($options['useDefaultTags'] === false)) {
-            $this->removeDefaultTags();
-        }
         if (!isset($options['useDefaultFilters']) || ($options['useDefaultFilters'] === true)) {
             $this->addDefaultFilters();
         }
@@ -179,13 +176,11 @@ abstract class Zend_Markup_Renderer_RendererAbstract
      *
      * @param string $encoding
      *
-     * @return Zend_Markup_Renderer_RendererAbstract
+     * @return void
      */
     public static function setEncoding($encoding)
     {
         self::$_encoding = $encoding;
-
-        return $this;
     }
 
     /**
@@ -557,7 +552,7 @@ abstract class Zend_Markup_Renderer_RendererAbstract
     public function getDefaultFilter()
     {
         if (null === $this->_defaultFilter) {
-            $this->setDefaultFilter();
+            $this->addDefaultFilters();
         }
 
         return $this->_defaultFilter;

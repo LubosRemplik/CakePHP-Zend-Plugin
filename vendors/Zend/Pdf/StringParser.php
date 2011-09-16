@@ -14,9 +14,9 @@
  *
  * @category   Zend
  * @package    Zend_Pdf
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: StringParser.php 20096 2010-01-06 02:05:09Z bkarwin $
+ * @version    $Id: StringParser.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 
@@ -38,7 +38,7 @@ require_once 'Zend/Pdf/Element/String.php';
  * PDF string parser
  *
  * @package    Zend_Pdf
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Pdf_StringParser
@@ -264,7 +264,14 @@ class Zend_Pdf_StringParser
             }
         } else {
             $start = $this->offset;
-            $this->offset += strcspn($this->data, "()<>[]{}/%\x00\t\n\f\r ", $this->offset);
+            $compare = '';
+            if( version_compare( phpversion(), '5.2.5' ) >= 0) {
+                $compare = "()<>[]{}/%\x00\t\n\f\r ";
+            } else {
+                $compare = "()<>[]{}/%\x00\t\n\r ";
+            }
+
+            $this->offset += strcspn($this->data, $compare, $this->offset);
 
             return substr($this->data, $start, $this->offset - $start);
         }

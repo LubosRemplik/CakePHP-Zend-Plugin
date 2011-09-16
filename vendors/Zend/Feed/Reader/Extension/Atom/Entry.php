@@ -14,9 +14,9 @@
  *
  * @category   Zend
  * @package    Zend_Feed_Reader
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Entry.php 20507 2010-01-21 22:21:07Z padraic $
+ * @version    $Id: Entry.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /**
@@ -52,7 +52,7 @@ require_once 'Zend/Feed/Reader/Feed/Atom/Source.php';
 /**
  * @category   Zend
  * @package    Zend_Feed_Reader
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Feed_Reader_Extension_Atom_Entry
@@ -127,9 +127,9 @@ class Zend_Feed_Reader_Extension_Atom_Entry
         if (array_key_exists('content', $this->_data)) {
             return $this->_data['content'];
         }
-        
+
         $content = null;
-        
+
         $el = $this->getXpath()->query($this->getXpathPrefix() . '/atom:content');
         if($el->length > 0) {
             $el = $el->item(0);
@@ -158,7 +158,7 @@ class Zend_Feed_Reader_Extension_Atom_Entry
                 break;
             }
         }
-        
+
         //var_dump($content); exit;
 
         if (!$content) {
@@ -169,7 +169,7 @@ class Zend_Feed_Reader_Extension_Atom_Entry
 
         return $this->_data['content'];
     }
-    
+
     /**
      * Parse out XHTML to remove the namespacing
      */
@@ -260,8 +260,6 @@ class Zend_Feed_Reader_Extension_Atom_Entry
 
         if (!$description) {
             $description = null;
-        } else {
-            $description = html_entity_decode($description, ENT_QUOTES, $this->getEncoding());
         }
 
         $this->_data['description'] = $description;
@@ -425,8 +423,6 @@ class Zend_Feed_Reader_Extension_Atom_Entry
 
         if (!$title) {
             $title = null;
-        } else {
-            $title = html_entity_decode($title, ENT_QUOTES, $this->getEncoding());
         }
 
         $this->_data['title'] = $title;
@@ -514,7 +510,7 @@ class Zend_Feed_Reader_Extension_Atom_Entry
 
         return $this->_data['commentfeedlink'];
     }
-    
+
     /**
      * Get all categories
      *
@@ -544,7 +540,7 @@ class Zend_Feed_Reader_Extension_Atom_Entry
                 $categoryCollection[] = array(
                     'term' => $category->getAttribute('term'),
                     'scheme' => $category->getAttribute('scheme'),
-                    'label' => html_entity_decode($category->getAttribute('label'))
+                    'label' => $category->getAttribute('label')
                 );
             }
         } else {
@@ -555,7 +551,7 @@ class Zend_Feed_Reader_Extension_Atom_Entry
 
         return $this->_data['categories'];
     }
-    
+
     /**
      * Get source feed metadata from the entry
      *
@@ -566,7 +562,7 @@ class Zend_Feed_Reader_Extension_Atom_Entry
         if (array_key_exists('source', $this->_data)) {
             return $this->_data['source'];
         }
-        
+
         $source = null;
         // TODO: Investigate why _getAtomType() fails here. Is it even needed?
         if ($this->getType() == Zend_Feed_Reader::TYPE_ATOM_10) {
@@ -576,9 +572,9 @@ class Zend_Feed_Reader_Extension_Atom_Entry
                 $source = new Zend_Feed_Reader_Feed_Atom_Source($element, $this->getXpathPrefix());
             }
         }
-        
+
         $this->_data['source'] = $source;
-        return $this->_data['source']; 
+        return $this->_data['source'];
     }
 
     /**
@@ -588,7 +584,7 @@ class Zend_Feed_Reader_Extension_Atom_Entry
     protected function _absolutiseUri($link)
     {
         if (!Zend_Uri::check($link)) {
-            if (!is_null($this->getBaseUrl())) {
+            if ($this->getBaseUrl() !== null) {
                 $link = $this->getBaseUrl() . $link;
                 if (!Zend_Uri::check($link)) {
                     $link = null;
@@ -611,7 +607,7 @@ class Zend_Feed_Reader_Extension_Atom_Entry
         $emailNode = $element->getElementsByTagName('email');
         $nameNode  = $element->getElementsByTagName('name');
         $uriNode   = $element->getElementsByTagName('uri');
-        
+
         if ($emailNode->length && strlen($emailNode->item(0)->nodeValue) > 0) {
             $author['email'] = $emailNode->item(0)->nodeValue;
         }

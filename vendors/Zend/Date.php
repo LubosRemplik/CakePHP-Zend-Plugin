@@ -14,9 +14,9 @@
  *
  * @category  Zend
  * @package   Zend_Date
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   http://framework.zend.com/license/new-bsd     New BSD License
- * @version   $Id: Date.php 20936 2010-02-05 22:36:44Z thomas $
+ * @version   $Id: Date.php 24108 2011-06-04 00:09:27Z freak $
  */
 
 /**
@@ -30,7 +30,7 @@ require_once 'Zend/Locale/Math.php';
 /**
  * @category  Zend
  * @package   Zend_Date
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Date extends Zend_Date_DateObject
@@ -274,6 +274,7 @@ class Zend_Date extends Zend_Date_DateObject
                             }
 
                             parent::$_cache = $value;
+                            parent::$_cacheTags = Zend_Date_DateObject::_getTagSupportForCache();
                             Zend_Locale_Data::setCache($value);
                         }
                         break;
@@ -439,8 +440,9 @@ class Zend_Date extends Zend_Date_DateObject
             }
         }
 
-        if (($format !== null) and !defined($format) and
-            ($format != 'ee') and ($format != 'ss') and Zend_Locale::isLocale($format, null, false)) {
+        if (($format !== null) && !defined($format)
+            && ($format != 'ee') && ($format != 'ss') && ($format != 'GG') && ($format != 'MM') && ($format != 'EE') && ($format != 'TT')
+            && Zend_Locale::isLocale($format, null, false)) {
             $locale = $format;
             $format = null;
         }
@@ -528,8 +530,9 @@ class Zend_Date extends Zend_Date_DateObject
             $locale = $this->getLocale();
         }
 
-        if (($part !== null) and !defined($part) and
-            ($part != 'ee') and ($part != 'ss') and Zend_Locale::isLocale($part, null, false)) {
+        if (($part !== null) && !defined($part)
+            && ($part != 'ee') && ($part != 'ss') && ($part != 'GG') && ($part != 'MM') && ($part != 'EE') && ($part != 'TT')
+            && Zend_Locale::isLocale($part, null, false)) {
             $locale = $part;
             $part = null;
         }
@@ -555,7 +558,7 @@ class Zend_Date extends Zend_Date_DateObject
         $comment = false;
         $format  = '';
         $orig    = '';
-        for ($i = 0; $i < strlen($part); ++$i) {
+        for ($i = 0; isset($part[$i]); ++$i) {
             if ($part[$i] == "'") {
                 $comment = $comment ? false : true;
                 if (isset($part[$i+1]) && ($part[$i+1] == "'")) {
@@ -1134,7 +1137,7 @@ class Zend_Date extends Zend_Date_DateObject
      * @return integer  0 = equal, 1 = later, -1 = earlier
      * @throws Zend_Date_Exception
      */
-    public function compare($date, $part = null, $locale = null)
+    public function compare($date, $part = self::TIMESTAMP, $locale = null)
     {
         if (self::$_options['format_type'] == 'php') {
             $part = Zend_Locale_Format::convertPhpToIsoFormat($part);
@@ -2104,7 +2107,10 @@ class Zend_Date extends Zend_Date_DateObject
                 break;
 
             case self::RFC_2822:
-                $result = preg_match('/^\w{3},\s(\d{1,2})\s(\w{3})\s(\d{4})\s(\d{2}):(\d{2}):{0,1}(\d{0,2})\s([+-]{1}\d{4})$/', $date, $match);
+                 $result = preg_match('/^\w{3},\s(\d{1,2})\s(\w{3})\s(\d{4})\s'
+                                    . '(\d{2}):(\d{2}):{0,1}(\d{0,2})\s([+-]'
+                                    . '{1}\d{4}|\w{1,20})$/', $date, $match);
+
                 if (!$result) {
                     require_once 'Zend/Date/Exception.php';
                     throw new Zend_Date_Exception("no RFC 2822 format ($date)", 0, null, $date);
@@ -2677,7 +2683,7 @@ class Zend_Date extends Zend_Date_DateObject
      * @return boolean
      * @throws Zend_Date_Exception
      */
-    public function equals($date, $part = null, $locale = null)
+    public function equals($date, $part = self::TIMESTAMP, $locale = null)
     {
         $result = $this->compare($date, $part, $locale);
 
@@ -2796,6 +2802,19 @@ class Zend_Date extends Zend_Date_DateObject
                     throw new Zend_Date_Exception($e->getMessage(), 0, $e);
                 }
             }
+
+            if (!array_key_exists('hour', $parsed)) {
+                $parsed['hour'] = 0;
+            }
+
+            if (!array_key_exists('minute', $parsed)) {
+                $parsed['minute'] = 0;
+            }
+
+            if (!array_key_exists('second', $parsed)) {
+                $parsed['second'] = 0;
+            }
+
             $time  = str_pad($parsed['hour'], 2, '0', STR_PAD_LEFT) . ":";
             $time .= str_pad($parsed['minute'], 2, '0', STR_PAD_LEFT) . ":";
             $time .= str_pad($parsed['second'], 2, '0', STR_PAD_LEFT);
@@ -2805,6 +2824,7 @@ class Zend_Date extends Zend_Date_DateObject
         if ($calc != 'cmp') {
             return $this;
         }
+
         return $return;
     }
 
@@ -2947,6 +2967,19 @@ class Zend_Date extends Zend_Date_DateObject
                     throw new Zend_Date_Exception($e->getMessage(), 0, $e);
                 }
             }
+
+            if (!array_key_exists('day', $parsed)) {
+                $parsed['day'] = 1;
+            }
+
+            if (!array_key_exists('month', $parsed)) {
+                $parsed['month'] = 1;
+            }
+
+            if (!array_key_exists('year', $parsed)) {
+                $parsed['year'] = 0;
+            }
+
             $date  = $parsed['day'] . "." . $parsed['month'] . "." . $parsed['year'];
         }
 
@@ -3208,7 +3241,7 @@ class Zend_Date extends Zend_Date_DateObject
     /**
      * Check if location is supported
      *
-     * @param $location array - locations array
+     * @param array $location locations array
      * @return $horizon float
      */
     private function _checkLocation($location)
@@ -3251,7 +3284,7 @@ class Zend_Date extends Zend_Date_DateObject
      * Returns the time of sunrise for this date and a given location as new date object
      * For a list of cities and correct locations use the class Zend_Date_Cities
      *
-     * @param  $location array - location of sunrise
+     * @param array $location location of sunrise
      *                   ['horizon']   -> civil, nautic, astronomical, effective (default)
      *                   ['longitude'] -> longitude of location
      *                   ['latitude']  -> latitude of location
@@ -3271,7 +3304,7 @@ class Zend_Date extends Zend_Date_DateObject
      * Returns the time of sunset for this date and a given location as new date object
      * For a list of cities and correct locations use the class Zend_Date_Cities
      *
-     * @param  $location array - location of sunset
+     * @param array $location location of sunset
      *                   ['horizon']   -> civil, nautic, astronomical, effective (default)
      *                   ['longitude'] -> longitude of location
      *                   ['latitude']  -> latitude of location
@@ -3291,7 +3324,7 @@ class Zend_Date extends Zend_Date_DateObject
      * Returns an array with the sunset and sunrise dates for all horizon types
      * For a list of cities and correct locations use the class Zend_Date_Cities
      *
-     * @param  $location array - location of suninfo
+     * @param array $location location of suninfo
      *                   ['horizon']   -> civil, nautic, astronomical, effective (default)
      *                   ['longitude'] -> longitude of location
      *                   ['latitude']  -> latitude of location
@@ -3756,7 +3789,7 @@ class Zend_Date extends Zend_Date_DateObject
      * Returns the day as new date object
      * Example: 20.May.1986 -> 20.Jan.1970 00:00:00
      *
-     * @param $locale  string|Zend_Locale  OPTIONAL Locale for parsing input
+     * @param Zend_Locale $locale OPTIONAL Locale for parsing input
      * @return Zend_Date
      */
     public function getDay($locale = null)
@@ -3768,9 +3801,9 @@ class Zend_Date extends Zend_Date_DateObject
     /**
      * Returns the calculated day
      *
-     * @param $calc    string                    Type of calculation to make
-     * @param $day     string|integer|Zend_Date  Day to calculate, when null the actual day is calculated
-     * @param $locale  string|Zend_Locale        Locale for parsing input
+     * @param string      $calc    Type of calculation to make
+     * @param Zend_Date   $day     Day to calculate, when null the actual day is calculated
+     * @param Zend_Locale $locale  Locale for parsing input
      * @return Zend_Date|integer
      */
     private function _day($calc, $day, $locale)
@@ -3899,7 +3932,7 @@ class Zend_Date extends Zend_Date_DateObject
      * Weekday is always from 1-7
      * Example: 09-Jan-2007 -> 2 = Tuesday -> 02-Jan-1970 (when 02.01.1970 is also Tuesday)
      *
-     * @param $locale  string|Zend_Locale  OPTIONAL Locale for parsing input
+     * @param Zend_Locale $locale OPTIONAL Locale for parsing input
      * @return Zend_Date
      */
     public function getWeekday($locale = null)
@@ -3917,9 +3950,9 @@ class Zend_Date extends Zend_Date_DateObject
     /**
      * Returns the calculated weekday
      *
-     * @param  $calc     string                          Type of calculation to make
-     * @param  $weekday  string|integer|array|Zend_Date  Weekday to calculate, when null the actual weekday is calculated
-     * @param  $locale   string|Zend_Locale              Locale for parsing input
+     * @param  string      $calc     Type of calculation to make
+     * @param  Zend_Date   $weekday  Weekday to calculate, when null the actual weekday is calculated
+     * @param  Zend_Locale $locale   Locale for parsing input
      * @return Zend_Date|integer
      * @throws Zend_Date_Exception
      */
@@ -4136,7 +4169,7 @@ class Zend_Date extends Zend_Date_DateObject
      * Returns the hour as new date object
      * Example: 02.Feb.1986 10:30:25 -> 01.Jan.1970 10:00:00
      *
-     * @param $locale  string|Zend_Locale  OPTIONAL Locale for parsing input
+     * @param Zend_Locale $locale OPTIONAL Locale for parsing input
      * @return Zend_Date
      */
     public function getHour($locale = null)
@@ -4587,7 +4620,7 @@ class Zend_Date extends Zend_Date_DateObject
      * Returns the week as new date object using monday as begining of the week
      * Example: 12.Jan.2007 -> 08.Jan.1970 00:00:00
      *
-     * @param $locale  string|Zend_Locale  OPTIONAL Locale for parsing input
+     * @param Zend_Locale $locale OPTIONAL Locale for parsing input
      * @return Zend_Date
      */
     public function getWeek($locale = null)
@@ -4713,7 +4746,8 @@ class Zend_Date extends Zend_Date_DateObject
             return false;
         }
 
-        if (($format !== null) and (Zend_Locale::isLocale($format, null, false))) {
+        if (($format !== null) && ($format != 'ee') && ($format != 'ss') && ($format != 'GG') && ($format != 'MM') && ($format != 'EE') && ($format != 'TT')
+            && (Zend_Locale::isLocale($format, null, false))) {
             $locale = $format;
             $format = null;
         }
@@ -4872,19 +4906,19 @@ class Zend_Date extends Zend_Date_DateObject
                 return Zend_Locale_Data::getContent($locale, 'date', array('gregorian', 'short'));
                 break;
             case self::TIMES :
-                return Zend_Locale_Data::getContent($locale, 'date');
+                return Zend_Locale_Data::getContent($locale, 'time');
                 break;
             case self::TIME_FULL :
                 return Zend_Locale_Data::getContent($locale, 'time', array('gregorian', 'full'));
                 break;
             case self::TIME_LONG :
-                return Zend_Locale_Data::getContent($locale, 'date', array('gregorian', 'long'));
+                return Zend_Locale_Data::getContent($locale, 'time', array('gregorian', 'long'));
                 break;
             case self::TIME_MEDIUM :
-                return Zend_Locale_Data::getContent($locale, 'date', array('gregorian', 'medium'));
+                return Zend_Locale_Data::getContent($locale, 'time', array('gregorian', 'medium'));
                 break;
             case self::TIME_SHORT :
-                return Zend_Locale_Data::getContent($locale, 'date', array('gregorian', 'short'));
+                return Zend_Locale_Data::getContent($locale, 'time', array('gregorian', 'short'));
                 break;
             case self::DATETIME :
                 return Zend_Locale_Data::getContent($locale, 'datetime');

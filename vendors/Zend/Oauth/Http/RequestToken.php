@@ -14,9 +14,9 @@
  *
  * @category   Zend
  * @package    Zend_Oauth
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: RequestToken.php 20217 2010-01-12 16:01:57Z matthew $
+ * @version    $Id: RequestToken.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /** Zend_Oauth_Http */
@@ -28,7 +28,7 @@ require_once 'Zend/Oauth/Token/Request.php';
 /**
  * @category   Zend
  * @package    Zend_Oauth
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Oauth_Http_RequestToken extends Zend_Oauth_Http
@@ -108,7 +108,7 @@ class Zend_Oauth_Http_RequestToken extends Zend_Oauth_Http
         $client->setHeaders('Authorization', $headerValue);
         $rawdata = $this->_httpUtility->toEncodedQueryString($params, true);
         if (!empty($rawdata)) {
-            $client->setRawData($rawdata);
+            $client->setRawData($rawdata, 'application/x-www-form-urlencoded');
         }
         $client->setMethod($this->_preferredRequestMethod);
         return $client;

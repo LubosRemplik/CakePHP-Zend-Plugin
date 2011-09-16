@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_Application
  * @subpackage Resource
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Frontcontroller.php 20886 2010-02-03 19:36:06Z matthew $
+ * @version    $Id: Frontcontroller.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /**
@@ -32,7 +32,7 @@ require_once 'Zend/Application/Resource/ResourceAbstract.php';
  * @category   Zend
  * @package    Zend_Application
  * @subpackage Resource
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Application_Resource_Frontcontroller extends Zend_Application_Resource_ResourceAbstract
@@ -68,7 +68,13 @@ class Zend_Application_Resource_Frontcontroller extends Zend_Application_Resourc
                     break;
 
                 case 'moduledirectory':
-                    $front->addModuleDirectory($value);
+                    if (is_string($value)) {
+                        $front->addModuleDirectory($value);
+                    } elseif (is_array($value)) {
+                        foreach($value as $moduleDir) {
+                            $front->addModuleDirectory($moduleDir);
+                        }
+                    }
                     break;
 
                 case 'defaultcontrollername':
@@ -95,9 +101,9 @@ class Zend_Application_Resource_Frontcontroller extends Zend_Application_Resourc
 
                 case 'plugins':
                     foreach ((array) $value as $pluginClass) {
-                    	$stackIndex = null;
-                    	if(is_array($pluginClass)) {
-                    	    $pluginClass = array_change_key_case($pluginClass, CASE_LOWER);
+                        $stackIndex = null;
+                        if(is_array($pluginClass)) {
+                            $pluginClass = array_change_key_case($pluginClass, CASE_LOWER);
                             if(isset($pluginClass['class']))
                             {
                                 if(isset($pluginClass['stackindex'])) {

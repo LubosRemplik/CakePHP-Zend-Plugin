@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_Service_WindowsAzure
  * @subpackage Storage
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: BlobInstance.php 14561 2009-05-07 08:05:12Z unknown $
+ * @version    $Id: TableInstance.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /**
@@ -25,71 +25,41 @@
  */
 require_once 'Zend/Service/WindowsAzure/Exception.php';
 
+/**
+ * @see Zend_Service_WindowsAzure_Storage_StorageEntityAbstract
+ */
+require_once 'Zend/Service/WindowsAzure/Storage/StorageEntityAbstract.php';
 
 /**
  * @category   Zend
  * @package    Zend_Service_WindowsAzure
  * @subpackage Storage
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * 
+ *
  * @property string  $Id              Id
  * @property string  $Name            Name
  * @property string  $Href            Href
  * @property string  $Updated         Updated
  */
 class Zend_Service_WindowsAzure_Storage_TableInstance
+    extends Zend_Service_WindowsAzure_Storage_StorageEntityAbstract
 {
     /**
-     * Data
-     * 
-     * @var array
-     */
-    protected $_data = null;
-    
-    /**
      * Constructor
-     * 
+     *
      * @param string  $id              Id
      * @param string  $name            Name
      * @param string  $href            Href
      * @param string  $updated         Updated
      */
-    public function __construct($id, $name, $href, $updated) 
-    {	        
+    public function __construct($id, $name, $href, $updated)
+    {	
         $this->_data = array(
             'id'               => $id,
             'name'             => $name,
             'href'             => $href,
             'updated'          => $updated
         );
-    }
-    
-    /**
-     * Magic overload for setting properties
-     * 
-     * @param string $name     Name of the property
-     * @param string $value    Value to set
-     */
-    public function __set($name, $value) {
-        if (array_key_exists(strtolower($name), $this->_data)) {
-            $this->_data[strtolower($name)] = $value;
-            return;
-        }
-
-        throw new Exception("Unknown property: " . $name);
-    }
-
-    /**
-     * Magic overload for getting properties
-     * 
-     * @param string $name     Name of the property
-     */
-    public function __get($name) {
-        if (array_key_exists(strtolower($name), $this->_data)) {
-            return $this->_data[strtolower($name)];
-        }
-
-        throw new Exception("Unknown property: " . $name);
     }
 }

@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_Soap
  * @subpackage Server
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -31,9 +31,9 @@ require_once 'Zend/Server/Interface.php';
  * @package    Zend_Soap
  * @subpackage Server
  * @uses       Zend_Server_Interface
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Server.php 20096 2010-01-06 02:05:09Z bkarwin $
+ * @version    $Id: Server.php 24066 2011-05-28 19:42:53Z ralph $
  */
 class Zend_Soap_Server implements Zend_Server_Interface
 {
@@ -210,6 +210,8 @@ class Zend_Soap_Server implements Zend_Server_Interface
                     $this->setWsdl($value);
                     break;
                 case 'featues':
+                    trigger_error(__METHOD__ . ': the option "featues" is deprecated as of 1.10.x and will be removed with 2.0.0; use "features" instead', E_USER_NOTICE);
+                case 'features':
                     $this->setSoapFeatures($value);
                     break;
                 case 'cache_wsdl':
@@ -827,7 +829,7 @@ class Zend_Soap_Server implements Zend_Server_Interface
             $soap->fault("Sender", $setRequestException->getMessage());
         } else {
             try {
-                $soap->handle($request);
+                $soap->handle($this->_request);
             } catch (Exception $e) {
                 $fault = $this->fault($e);
                 $soap->fault($fault->faultcode, $fault->faultstring);

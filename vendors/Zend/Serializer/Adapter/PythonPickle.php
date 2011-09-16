@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_Serializer
  * @subpackage Adapter
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: PythonPickle.php 20575 2010-01-24 17:48:27Z mabe $
+ * @version    $Id: PythonPickle.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /** @see Zend_Serializer_Adapter_AdapterAbstract */
@@ -31,7 +31,7 @@ require_once 'Zend/Serializer/Adapter/AdapterAbstract.php';
  * @category   Zend
  * @package    Zend_Serializer
  * @subpackage Adapter
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Serializer_Adapter_PythonPickle extends Zend_Serializer_Adapter_AdapterAbstract
@@ -1366,7 +1366,7 @@ class Zend_Serializer_Adapter_PythonPickle extends Zend_Serializer_Adapter_Adapt
     {
         $proto = ord($this->_read(1));
         if ($proto < 2 || $proto > 3) {
-            require_once 'Zend/Serializer/Excception.php';
+            require_once 'Zend/Serializer/Exception.php';
             throw new Zend_Serializer_Exception('Invalid protocol version detected');
         }
         $this->_protocol = $proto;

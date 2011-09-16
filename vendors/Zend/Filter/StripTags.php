@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Zend Framework
  *
@@ -15,9 +14,9 @@
  *
  * @category   Zend
  * @package    Zend_Filter
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: StripTags.php 20486 2010-01-21 18:43:53Z matthew $
+ * @version    $Id: StripTags.php 24278 2011-07-28 18:32:21Z adamlundrigan $
  */
 
 
@@ -30,7 +29,7 @@ require_once 'Zend/Filter/Interface.php';
 /**
  * @category   Zend
  * @package    Zend_Filter
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Filter_StripTags implements Zend_Filter_Interface
@@ -85,7 +84,8 @@ class Zend_Filter_StripTags implements Zend_Filter_Interface
     {
         if ($options instanceof Zend_Config) {
             $options = $options->toArray();
-        } else if (!is_array($options)) {
+        } else if ((!is_array($options)) || (is_array($options) && !array_key_exists('allowTags', $options) &&
+            !array_key_exists('allowAttribs', $options) && !array_key_exists('allowComments', $options))) {
             $options = func_get_args();
             $temp['allowTags'] = array_shift($options);
             if (!empty($options)) {
@@ -237,14 +237,30 @@ class Zend_Filter_StripTags implements Zend_Filter_Interface
      */
     public function filter($value)
     {
+        $value = (string) $value;
+
         // Strip HTML comments first
-        $valueCopy = preg_replace('#<!--(?:[^<]+|<(?!\!--))*?(--\s*>)#s', '', (string) $value);
+        while (strpos($value, '<!--') !== false) {
+            $pos   = strrpos($value, '<!--');
+            $start = substr($value, 0, $pos);
+            $value = substr($value, $pos);
+
+            // If there is no comment closing tag, strip whole text
+            if (!preg_match('/--\s*>/s', $value)) {
+                $value = '';
+            } else {
+                $value = preg_replace('/<(?:!(?:--[\s\S]*?--\s*)?(>))/s', '',  $value);
+            }
+
+            $value = $start . $value;
+        }
 
         // Initialize accumulator for filtered data
         $dataFiltered = '';
         // Parse the input data iteratively as regular pre-tag text followed by a
         // tag; either may be empty strings
-        preg_match_all('/([^<]*)(<?[^>]*>?)/', (string) $valueCopy, $matches);
+        preg_match_all('/([^<]*)(<?[^>]*>?)/', (string) $value, $matches);
+
         // Iterate over each set of matches
         foreach ($matches[1] as $index => $preTag) {
             // If the pre-tag text is non-empty, strip any ">" characters from it
@@ -303,7 +319,7 @@ class Zend_Filter_StripTags implements Zend_Filter_Interface
         // If there are non-whitespace characters in the attribute string
         if (strlen($tagAttributes)) {
             // Parse iteratively for well-formed attributes
-            preg_match_all('/(\w+)\s*=\s*(?:(")(.*?)"|(\')(.*?)\')/s', $tagAttributes, $matches);
+            preg_match_all('/([\w-]+)\s*=\s*(?:(")(.*?)"|(\')(.*?)\')/s', $tagAttributes, $matches);
 
             // Initialize valid attribute accumulator
             $tagAttributes = '';
@@ -311,8 +327,8 @@ class Zend_Filter_StripTags implements Zend_Filter_Interface
             // Iterate over each matched attribute
             foreach ($matches[1] as $index => $attributeName) {
                 $attributeName      = strtolower($attributeName);
-                $attributeDelimiter = $matches[2][$index];
-                $attributeValue     = $matches[3][$index];
+                $attributeDelimiter = empty($matches[2][$index]) ? $matches[4][$index] : $matches[2][$index];
+                $attributeValue     = empty($matches[3][$index]) ? $matches[5][$index] : $matches[3][$index];
 
                 // If the attribute is not allowed, then remove it entirely
                 if (!array_key_exists($attributeName, $this->_tagsAllowed[$tagName])

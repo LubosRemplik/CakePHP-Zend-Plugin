@@ -14,9 +14,9 @@
  *
  * @category   Zend
  * @package    Zend_Controller
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Http.php 20984 2010-02-08 16:25:08Z matthew $
+ * @version    $Id: Http.php 24008 2011-05-04 18:11:15Z ralph $
  */
 
 /** @see Zend_Controller_Request_Abstract */
@@ -545,13 +545,13 @@ class Zend_Controller_Request_Http extends Zend_Controller_Request_Abstract
      *
      * @return string
      */
-    public function getBaseUrl()
+    public function getBaseUrl($raw = false)
     {
         if (null === $this->_baseUrl) {
             $this->setBaseUrl();
         }
 
-        return $this->_baseUrl;
+        return (($raw == false) ? urldecode($this->_baseUrl) : $this->_baseUrl);
     }
 
     /**
@@ -612,29 +612,33 @@ class Zend_Controller_Request_Http extends Zend_Controller_Request_Abstract
     public function setPathInfo($pathInfo = null)
     {
         if ($pathInfo === null) {
-            $baseUrl = $this->getBaseUrl();
-
+            $baseUrl = $this->getBaseUrl(); // this actually calls setBaseUrl() & setRequestUri()
+            $baseUrlRaw = $this->getBaseUrl(false);
+            $baseUrlEncoded = urlencode($baseUrlRaw);
+        
             if (null === ($requestUri = $this->getRequestUri())) {
                 return $this;
             }
-
+        
             // Remove the query string from REQUEST_URI
             if ($pos = strpos($requestUri, '?')) {
                 $requestUri = substr($requestUri, 0, $pos);
             }
-
-            if (null !== $baseUrl
-                && ((!empty($baseUrl) && 0 === strpos($requestUri, $baseUrl)) 
-                    || empty($baseUrl))
-                    && false === ($pathInfo = substr($requestUri, strlen($baseUrl)))
-            ){ 
-                // If substr() returns false then PATH_INFO is set to an empty string 
-                $pathInfo = '';
-            } elseif (null === $baseUrl 
-                    || (!empty($baseUrl) && false === strpos($requestUri, $baseUrl))
-            ) { 
-                $pathInfo = $requestUri; 
+            
+            if (!empty($baseUrl) || !empty($baseUrlRaw)) {
+                if (strpos($requestUri, $baseUrl) === 0) {
+                    $pathInfo = substr($requestUri, strlen($baseUrl));
+                } elseif (strpos($requestUri, $baseUrlRaw) === 0) {
+                    $pathInfo = substr($requestUri, strlen($baseUrlRaw));
+                } elseif (strpos($requestUri, $baseUrlEncoded) === 0) {
+                    $pathInfo = substr($requestUri, strlen($baseUrlEncoded));
+                } else {
+                    $pathInfo = $requestUri;
+                }
+            } else {
+                $pathInfo = $requestUri;
             }
+        
         }
 
         $this->_pathInfo = (string) $pathInfo;
@@ -979,7 +983,7 @@ class Zend_Controller_Request_Http extends Zend_Controller_Request_Abstract
 
         // Try to get it from the $_SERVER array first
         $temp = 'HTTP_' . strtoupper(str_replace('-', '_', $header));
-        if (!empty($_SERVER[$temp])) {
+        if (isset($_SERVER[$temp])) {
             return $_SERVER[$temp];
         }
 
@@ -987,8 +991,14 @@ class Zend_Controller_Request_Http extends Zend_Controller_Request_Abstract
         // Apache
         if (function_exists('apache_request_headers')) {
             $headers = apache_request_headers();
-            if (!empty($headers[$header])) {
+            if (isset($headers[$header])) {
                 return $headers[$header];
+            }
+            $header = strtolower($header);
+            foreach ($headers as $key => $value) {
+                if (strtolower($key) == $header) {
+                    return $value;
+                }
             }
         }
 
@@ -1025,7 +1035,10 @@ class Zend_Controller_Request_Http extends Zend_Controller_Request_Abstract
         $name   = $this->getServer('SERVER_NAME');
         $port   = $this->getServer('SERVER_PORT');
 
-        if (($scheme == self::SCHEME_HTTP && $port == 80) || ($scheme == self::SCHEME_HTTPS && $port == 443)) {
+        if(null === $name) {
+            return '';
+        }
+        elseif (($scheme == self::SCHEME_HTTP && $port == 80) || ($scheme == self::SCHEME_HTTPS && $port == 443)) {
             return $name;
         } else {
             return $name . ':' . $port;

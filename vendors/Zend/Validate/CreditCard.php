@@ -14,9 +14,9 @@
  *
  * @category   Zend
  * @package    Zend_Validate
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: CreditCard.php 20358 2010-01-17 19:03:49Z thomas $
+ * @version    $Id: CreditCard.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /**
@@ -27,7 +27,7 @@ require_once 'Zend/Validate/Abstract.php';
 /**
  * @category   Zend
  * @package    Zend_Validate
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Validate_CreditCard extends Zend_Validate_Abstract
@@ -64,13 +64,13 @@ class Zend_Validate_CreditCard extends Zend_Validate_Abstract
      * @var array
      */
     protected $_messageTemplates = array(
-        self::CHECKSUM       => "Luhn algorithm (mod-10 checksum) failed on '%value%'",
+        self::CHECKSUM       => "'%value%' seems to contain an invalid checksum",
         self::CONTENT        => "'%value%' must contain only digits",
-        self::INVALID        => "Invalid type given, value should be a string",
+        self::INVALID        => "Invalid type given. String expected",
         self::LENGTH         => "'%value%' contains an invalid amount of digits",
         self::PREFIX         => "'%value%' is not from an allowed institute",
-        self::SERVICE        => "Validation of '%value%' has been failed by the service",
-        self::SERVICEFAILURE => "The service returned a failure while validating '%value%'",
+        self::SERVICE        => "'%value%' seems to be an invalid creditcard number",
+        self::SERVICEFAILURE => "An exception has been raised while validating '%value%'",
     );
 
     /**
@@ -259,26 +259,28 @@ class Zend_Validate_CreditCard extends Zend_Validate_Abstract
 
         $length = strlen($value);
         $types  = $this->getType();
-        $found  = false;
+        $foundp = false;
+        $foundl = false;
         foreach ($types as $type) {
-            if (in_array($length, $this->_cardLength[$type])) {
-                foreach ($this->_cardType[$type] as $prefix) {
-                    if (substr($value, 0, strlen($prefix)) == $prefix) {
-                        $found = true;
-                        break;
+            foreach ($this->_cardType[$type] as $prefix) {
+                if (substr($value, 0, strlen($prefix)) == $prefix) {
+                    $foundp = true;
+                    if (in_array($length, $this->_cardLength[$type])) {
+                        $foundl = true;
+                        break 2;
                     }
                 }
             }
         }
 
-        if ($found == false) {
-            if (!in_array($length, $this->_cardLength[$type])) {
-                $this->_error(self::LENGTH, $value);
-                return false;
-            } else {
-                $this->_error(self::PREFIX, $value);
-                return false;
-            }
+        if ($foundp == false){
+            $this->_error(self::PREFIX, $value);
+            return false;
+        }
+
+        if ($foundl == false) {
+            $this->_error(self::LENGTH, $value);
+            return false;
         }
 
         $sum    = 0;

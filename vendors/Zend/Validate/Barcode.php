@@ -14,9 +14,9 @@
  *
  * @category   Zend
  * @package    Zend_Validate
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Barcode.php 20358 2010-01-17 19:03:49Z thomas $
+ * @version    $Id: Barcode.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /**
@@ -32,7 +32,7 @@ require_once 'Zend/Loader.php';
 /**
  * @category   Zend
  * @package    Zend_Validate
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Validate_Barcode extends Zend_Validate_Abstract
@@ -46,7 +46,7 @@ class Zend_Validate_Barcode extends Zend_Validate_Abstract
         self::FAILED         => "'%value%' failed checksum validation",
         self::INVALID_CHARS  => "'%value%' contains invalid characters",
         self::INVALID_LENGTH => "'%value%' should have a length of %length% characters",
-        self::INVALID        => "Invalid type given, value should be string",
+        self::INVALID        => "Invalid type given. String expected",
     );
 
     /**
@@ -189,11 +189,22 @@ class Zend_Validate_Barcode extends Zend_Validate_Abstract
             return false;
         }
 
-        $this->_value  = (string) $value;
+        $this->_setValue($value);
         $adapter       = $this->getAdapter();
         $this->_length = $adapter->getLength();
         $result        = $adapter->checkLength($value);
         if (!$result) {
+            if (is_array($this->_length)) {
+                $temp = $this->_length;
+                $this->_length = "";
+                foreach($temp as $length) {
+                    $this->_length .= "/";
+                    $this->_length .= $length;
+                }
+
+                $this->_length = substr($this->_length, 1);
+            }
+
             $this->_error(self::INVALID_LENGTH);
             return false;
         }

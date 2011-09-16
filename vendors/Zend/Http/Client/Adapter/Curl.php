@@ -16,8 +16,8 @@
  * @category   Zend
  * @package    Zend_Http
  * @subpackage Client_Adapter
- * @version    $Id: Curl.php 20096 2010-01-06 02:05:09Z bkarwin $
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @version    $Id: Curl.php 24272 2011-07-27 21:12:08Z mcleod@spaceweb.nl $
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -42,7 +42,7 @@ require_once 'Zend/Http/Client/Adapter/Stream.php';
  * @category   Zend
  * @package    Zend_Http
  * @subpackage Client_Adapter
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Http_Client_Adapter_Curl implements Zend_Http_Client_Adapter_Interface, Zend_Http_Client_Adapter_Stream
@@ -73,23 +73,7 @@ class Zend_Http_Client_Adapter_Curl implements Zend_Http_Client_Adapter_Interfac
      *
      * @var array
      */
-    protected $_invalidOverwritableCurlOptions = array(
-        CURLOPT_HTTPGET,
-        CURLOPT_POST,
-        CURLOPT_PUT,
-        CURLOPT_CUSTOMREQUEST,
-        CURLOPT_HEADER,
-        CURLOPT_RETURNTRANSFER,
-        CURLOPT_HTTPHEADER,
-        CURLOPT_POSTFIELDS,
-        CURLOPT_INFILE,
-        CURLOPT_INFILESIZE,
-        CURLOPT_PORT,
-        CURLOPT_MAXREDIRS,
-        CURLOPT_CONNECTTIMEOUT,
-        CURL_HTTP_VERSION_1_1,
-        CURL_HTTP_VERSION_1_0,
-    );
+    protected $_invalidOverwritableCurlOptions;
 
     /**
      * Response gotten from server
@@ -119,6 +103,23 @@ class Zend_Http_Client_Adapter_Curl implements Zend_Http_Client_Adapter_Interfac
             require_once 'Zend/Http/Client/Adapter/Exception.php';
             throw new Zend_Http_Client_Adapter_Exception('cURL extension has to be loaded to use this Zend_Http_Client adapter.');
         }
+        $this->_invalidOverwritableCurlOptions = array(
+            CURLOPT_HTTPGET,
+            CURLOPT_POST,
+            CURLOPT_PUT,
+            CURLOPT_CUSTOMREQUEST,
+            CURLOPT_HEADER,
+            CURLOPT_RETURNTRANSFER,
+            CURLOPT_HTTPHEADER,
+            CURLOPT_POSTFIELDS,
+            CURLOPT_INFILE,
+            CURLOPT_INFILESIZE,
+            CURLOPT_PORT,
+            CURLOPT_MAXREDIRS,
+            CURLOPT_CONNECTTIMEOUT,
+            CURL_HTTP_VERSION_1_1,
+            CURL_HTTP_VERSION_1_0,
+        );
     }
 
     /**
@@ -334,6 +335,11 @@ class Zend_Http_Client_Adapter_Curl implements Zend_Http_Client_Adapter_Interfac
                 $curlValue = "TRACE";
                 break;
 
+            case Zend_Http_Client::HEAD:
+                $curlMethod = CURLOPT_CUSTOMREQUEST;
+                $curlValue = "HEAD";
+                break;
+
             default:
                 // For now, through an exception for unsupported request methods
                 require_once 'Zend/Http/Client/Adapter/Exception.php';
@@ -386,6 +392,9 @@ class Zend_Http_Client_Adapter_Curl implements Zend_Http_Client_Adapter_Interfac
             unset($this->_config['curloptions'][CURLOPT_INFILESIZE]);
         } elseif ($method == Zend_Http_Client::PUT) {
             // This is a PUT by a setRawData string, not by file-handle
+            curl_setopt($this->_curl, CURLOPT_POSTFIELDS, $body);
+        } elseif ($method == Zend_Http_Client::DELETE) {
+            // This is a DELETE by a setRawData string
             curl_setopt($this->_curl, CURLOPT_POSTFIELDS, $body);
         }
 

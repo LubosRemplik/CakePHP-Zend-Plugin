@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Element
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -28,9 +28,9 @@ require_once 'Zend/Form/Element/Xhtml.php';
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Element
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Submit.php 20096 2010-01-06 02:05:09Z bkarwin $
+ * @version    $Id: Submit.php 24280 2011-07-28 18:39:33Z matthew $
  */
 class Zend_Form_Element_Submit extends Zend_Form_Element_Xhtml
 {
@@ -52,7 +52,7 @@ class Zend_Form_Element_Submit extends Zend_Form_Element_Xhtml
         if (is_string($spec) && ((null !== $options) && is_string($options))) {
             $options = array('label' => $options);
         }
-        
+
         if (!isset($options['ignore'])) {
             $options['ignore'] = true;
         }
@@ -75,10 +75,10 @@ class Zend_Form_Element_Submit extends Zend_Form_Element_Xhtml
 
         if (null === $value) {
             $value = $this->getName();
-        }
 
-        if (null !== ($translator = $this->getTranslator())) {
-            return $translator->translate($value);
+            if (null !== ($translator = $this->getTranslator())) {
+                return $translator->translate($value);
+            }
         }
 
         return $value;
@@ -108,12 +108,12 @@ class Zend_Form_Element_Submit extends Zend_Form_Element_Xhtml
      *
      * Uses only 'Submit' and 'DtDdWrapper' decorators by default.
      *
-     * @return void
+     * @return Zend_Form_Element_Submit
      */
     public function loadDefaultDecorators()
     {
         if ($this->loadDefaultDecoratorsIsDisabled()) {
-            return;
+            return $this;
         }
 
         $decorators = $this->getDecorators();
@@ -122,5 +122,6 @@ class Zend_Form_Element_Submit extends Zend_Form_Element_Xhtml
                  ->addDecorator('ViewHelper')
                  ->addDecorator('DtDdWrapper');
         }
+        return $this;
     }
 }

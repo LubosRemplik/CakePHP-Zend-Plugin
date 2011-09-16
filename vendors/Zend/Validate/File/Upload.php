@@ -14,9 +14,9 @@
  *
  * @category  Zend
  * @package   Zend_Validate
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   http://framework.zend.com/license/new-bsd     New BSD License
- * @version   $Id: Upload.php 20431 2010-01-19 21:36:05Z thomas $
+ * @version   $Id: Upload.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /**
@@ -29,7 +29,7 @@ require_once 'Zend/Validate/Abstract.php';
  *
  * @category  Zend
  * @package   Zend_Validate
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Validate_File_Upload extends Zend_Validate_Abstract
@@ -136,6 +136,11 @@ class Zend_Validate_File_Upload extends Zend_Validate_Abstract
             $this->_files = $files;
         }
 
+        // see ZF-10738
+        if (is_null($this->_files)) {
+            $this->_files = array();
+        }
+
         foreach($this->_files as $file => $content) {
             if (!isset($content['error'])) {
                 unset($this->_files[$file]);
@@ -156,6 +161,7 @@ class Zend_Validate_File_Upload extends Zend_Validate_Abstract
      */
     public function isValid($value, $file = null)
     {
+        $this->_messages = null;
         if (array_key_exists($value, $this->_files)) {
             $files[$value] = $this->_files[$value];
         } else {

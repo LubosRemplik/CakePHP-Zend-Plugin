@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_Db
  * @subpackage Adapter
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Sqlsrv.php 20630 2010-01-25 21:18:20Z ralph $
+ * @version    $Id: Sqlsrv.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /**
@@ -34,7 +34,7 @@ require_once 'Zend/Db/Statement/Sqlsrv.php';
  * @category   Zend
  * @package    Zend_Db
  * @subpackage Adapter
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Db_Adapter_Sqlsrv extends Zend_Db_Adapter_Abstract
@@ -437,6 +437,13 @@ class Zend_Db_Adapter_Sqlsrv extends Zend_Db_Adapter_Abstract
         $sql    = "exec sp_columns @table_name = " . $this->quoteIdentifier($tableName, true);
         $stmt   = $this->query($sql);
         $result = $stmt->fetchAll(Zend_Db::FETCH_NUM);
+		
+		// ZF-7698
+		$stmt->closeCursor();
+
+        if (count($result) == 0) {
+            return array();
+        }
 
         $owner           = 1;
         $table_name      = 2;
@@ -605,23 +612,27 @@ class Zend_Db_Adapter_Sqlsrv extends Zend_Db_Adapter_Abstract
             throw new Zend_Db_Adapter_Exception("LIMIT argument offset=$offset is not valid");
         }
 
-        $orderby = stristr($sql, 'ORDER BY');
-        if ($orderby !== false) {
-            $sort  = (stripos($orderby, ' desc') !== false) ? 'desc' : 'asc';
-            $order = str_ireplace('ORDER BY', '', $orderby);
-            $order = trim(preg_replace('/\bASC\b|\bDESC\b/i', '', $order));
-        }
+        if ($offset == 0) {
+            $sql = preg_replace('/^SELECT\s/i', 'SELECT TOP ' . $count . ' ', $sql);
+        } else {
+            $orderby = stristr($sql, 'ORDER BY');
 
-        $sql = preg_replace('/^SELECT\s/i', 'SELECT TOP ' . ($count+$offset) . ' ', $sql);
+            if (!$orderby) {
+                $over = 'ORDER BY (SELECT 0)';
+            } else {
+                $over = preg_replace('/\"[^,]*\".\"([^,]*)\"/i', '"inner_tbl"."$1"', $orderby);
+            }
 
-        $sql = 'SELECT * FROM (SELECT TOP ' . $count . ' * FROM (' . $sql . ') AS inner_tbl';
-        if ($orderby !== false) {
-            $sql .= ' ORDER BY ' . $order . ' ';
-            $sql .= (stripos($sort, 'asc') !== false) ? 'DESC' : 'ASC';
-        }
-        $sql .= ') AS outer_tbl';
-        if ($orderby !== false) {
-            $sql .= ' ORDER BY ' . $order . ' ' . $sort;
+            // Remove ORDER BY clause from $sql
+            $sql = preg_replace('/\s+ORDER BY(.*)/', '', $sql);
+
+            // Add ORDER BY clause as an argument for ROW_NUMBER()
+            $sql = "SELECT ROW_NUMBER() OVER ($over) AS \"ZEND_DB_ROWNUM\", * FROM ($sql) AS inner_tbl";
+
+            $start = $offset + 1;
+            $end = $offset + $count;
+
+            $sql = "WITH outer_tbl AS ($sql) SELECT * FROM outer_tbl WHERE \"ZEND_DB_ROWNUM\" BETWEEN $start AND $end";
         }
 
         return $sql;
@@ -651,10 +662,10 @@ class Zend_Db_Adapter_Sqlsrv extends Zend_Db_Adapter_Abstract
     public function getServerVersion()
     {
         $this->_connect();
-        $version = sqlsrv_client_info($this->_connection);
+        $serverInfo = sqlsrv_server_info($this->_connection);
 
-        if ($version !== false) {
-            return $version['DriverVer'];
+        if ($serverInfo !== false) {
+            return $serverInfo['SQLServerVersion'];
         }
 
         return null;

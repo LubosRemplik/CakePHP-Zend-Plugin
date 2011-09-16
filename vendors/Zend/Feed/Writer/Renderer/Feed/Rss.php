@@ -14,9 +14,9 @@
  *
  * @category   Zend
  * @package    Zend_Feed_Writer
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Rss.php 20519 2010-01-22 14:06:24Z padraic $
+ * @version    $Id: Rss.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /** @see Zend_Feed_Writer_Feed */
@@ -37,7 +37,7 @@ require_once 'Zend/Feed/Writer/Renderer/RendererAbstract.php';
 /**
  * @category   Zend
  * @package    Zend_Feed_Writer
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Feed_Writer_Renderer_Feed_Rss
@@ -46,8 +46,8 @@ class Zend_Feed_Writer_Renderer_Feed_Rss
 {
     /**
      * Constructor
-     * 
-     * @param  Zend_Feed_Writer_Feed $container 
+     *
+     * @param  Zend_Feed_Writer_Feed $container
      * @return void
      */
     public function __construct (Zend_Feed_Writer_Feed $container)
@@ -57,7 +57,7 @@ class Zend_Feed_Writer_Renderer_Feed_Rss
 
     /**
      * Render RSS feed
-     * 
+     *
      * @return Zend_Feed_Writer_Renderer_Feed_Rss
      */
     public function render()
@@ -71,7 +71,7 @@ class Zend_Feed_Writer_Renderer_Feed_Rss
         $rss = $this->_dom->createElement('rss');
         $this->setRootElement($rss);
         $rss->setAttribute('version', '2.0');
-        
+
         $channel = $this->_dom->createElement('channel');
         $rss->appendChild($channel);
         $this->_dom->appendChild($rss);
@@ -79,21 +79,23 @@ class Zend_Feed_Writer_Renderer_Feed_Rss
         $this->_setBaseUrl($this->_dom, $channel);
         $this->_setTitle($this->_dom, $channel);
         $this->_setDescription($this->_dom, $channel);
+        $this->_setImage($this->_dom, $channel);
         $this->_setDateCreated($this->_dom, $channel);
         $this->_setDateModified($this->_dom, $channel);
+        $this->_setLastBuildDate($this->_dom, $channel);
         $this->_setGenerator($this->_dom, $channel);
         $this->_setLink($this->_dom, $channel);
         $this->_setAuthors($this->_dom, $channel);
         $this->_setCopyright($this->_dom, $channel);
         $this->_setCategories($this->_dom, $channel);
-        
+
         foreach ($this->_extensions as $ext) {
             $ext->setType($this->getType());
             $ext->setRootElement($this->getRootElement());
             $ext->setDomDocument($this->getDomDocument(), $channel);
             $ext->render();
         }
-        
+
         foreach ($this->_container as $entry) {
             if ($this->getDataContainer()->getEncoding()) {
                 $entry->setEncoding($this->getDataContainer()->getEncoding());
@@ -118,9 +120,9 @@ class Zend_Feed_Writer_Renderer_Feed_Rss
 
     /**
      * Set feed language
-     * 
-     * @param DOMDocument $dom 
-     * @param DOMElement $root 
+     *
+     * @param DOMDocument $dom
+     * @param DOMElement $root
      * @return void
      */
     protected function _setLanguage(DOMDocument $dom, DOMElement $root)
@@ -136,9 +138,9 @@ class Zend_Feed_Writer_Renderer_Feed_Rss
 
     /**
      * Set feed title
-     * 
-     * @param DOMDocument $dom 
-     * @param DOMElement $root 
+     *
+     * @param DOMDocument $dom
+     * @param DOMElement $root
      * @return void
      */
     protected function _setTitle(DOMDocument $dom, DOMElement $root)
@@ -164,9 +166,9 @@ class Zend_Feed_Writer_Renderer_Feed_Rss
 
     /**
      * Set feed description
-     * 
-     * @param DOMDocument $dom 
-     * @param DOMElement $root 
+     *
+     * @param DOMDocument $dom
+     * @param DOMElement $root
      * @return void
      */
     protected function _setDescription(DOMDocument $dom, DOMElement $root)
@@ -191,9 +193,9 @@ class Zend_Feed_Writer_Renderer_Feed_Rss
 
     /**
      * Set date feed was last modified
-     * 
-     * @param DOMDocument $dom 
-     * @param DOMElement $root 
+     *
+     * @param DOMDocument $dom
+     * @param DOMElement $root
      * @return void
      */
     protected function _setDateModified(DOMDocument $dom, DOMElement $root)
@@ -212,9 +214,9 @@ class Zend_Feed_Writer_Renderer_Feed_Rss
 
     /**
      * Set feed generator string
-     * 
-     * @param DOMDocument $dom 
-     * @param DOMElement $root 
+     *
+     * @param DOMDocument $dom
+     * @param DOMElement $root
      * @return void
      */
     protected function _setGenerator(DOMDocument $dom, DOMElement $root)
@@ -240,9 +242,9 @@ class Zend_Feed_Writer_Renderer_Feed_Rss
 
     /**
      * Set link to feed
-     * 
-     * @param DOMDocument $dom 
-     * @param DOMElement $root 
+     *
+     * @param DOMDocument $dom
+     * @param DOMElement $root
      * @return void
      */
     protected function _setLink(DOMDocument $dom, DOMElement $root)
@@ -268,12 +270,12 @@ class Zend_Feed_Writer_Renderer_Feed_Rss
             $link->setAttribute('isPermaLink', 'false');
         }
     }
-    
+
     /**
      * Set feed authors
-     * 
-     * @param DOMDocument $dom 
-     * @param DOMElement $root 
+     *
+     * @param DOMDocument $dom
+     * @param DOMElement $root
      * @return void
      */
     protected function _setAuthors(DOMDocument $dom, DOMElement $root)
@@ -293,12 +295,12 @@ class Zend_Feed_Writer_Renderer_Feed_Rss
             $root->appendChild($author);
         }
     }
-    
+
     /**
      * Set feed copyright
-     * 
-     * @param DOMDocument $dom 
-     * @param DOMElement $root 
+     *
+     * @param DOMDocument $dom
+     * @param DOMElement $root
      * @return void
      */
     protected function _setCopyright(DOMDocument $dom, DOMElement $root)
@@ -312,12 +314,120 @@ class Zend_Feed_Writer_Renderer_Feed_Rss
         $text = $dom->createTextNode($copyright);
         $copy->appendChild($text);
     }
-    
+
+    /**
+     * Set feed channel image
+     *
+     * @param DOMDocument $dom
+     * @param DOMElement $root
+     * @return void
+     */
+    protected function _setImage(DOMDocument $dom, DOMElement $root)
+    {
+        $image = $this->getDataContainer()->getImage();
+        if (!$image) {
+            return;
+        }
+        if (!isset($image['title']) || empty($image['title'])
+        || !is_string($image['title'])) {
+            require_once 'Zend/Feed/Exception.php';
+            $message = 'RSS 2.0 feed images must include a title';
+            $exception = new Zend_Feed_Exception($message);
+            if (!$this->_ignoreExceptions) {
+                throw $exception;
+            } else {
+                $this->_exceptions[] = $exception;
+                return;
+            }
+        }
+        if (empty($image['link']) || !is_string($image['link'])
+        || !Zend_Uri::check($image['link'])) {
+            require_once 'Zend/Feed/Exception.php';
+            $message = 'Invalid parameter: parameter \'link\''
+            . ' must be a non-empty string and valid URI/IRI';
+            $exception = new Zend_Feed_Exception($message);
+            if (!$this->_ignoreExceptions) {
+                throw $exception;
+            } else {
+                $this->_exceptions[] = $exception;
+                return;
+            }
+        }
+        $img = $dom->createElement('image');
+        $root->appendChild($img);
+        $url = $dom->createElement('url');
+        $text = $dom->createTextNode($image['uri']);
+        $url->appendChild($text);
+        $title = $dom->createElement('title');
+        $text = $dom->createTextNode($image['title']);
+        $title->appendChild($text);
+        $link = $dom->createElement('link');
+        $text = $dom->createTextNode($image['link']);
+        $link->appendChild($text);
+        $img->appendChild($url);
+        $img->appendChild($title);
+        $img->appendChild($link);
+        if (isset($image['height'])) {
+            if (!ctype_digit((string) $image['height']) || $image['height'] > 400) {
+                require_once 'Zend/Feed/Exception.php';
+                $message = 'Invalid parameter: parameter \'height\''
+                . ' must be an integer not exceeding 400';
+                $exception = new Zend_Feed_Exception($message);
+                if (!$this->_ignoreExceptions) {
+                    throw $exception;
+                } else {
+                    $this->_exceptions[] = $exception;
+                    return;
+                }
+            }
+            $height = $dom->createElement('height');
+            $text = $dom->createTextNode($image['height']);
+            $height->appendChild($text);
+            $img->appendChild($height);
+        }
+        if (isset($image['width'])) {
+            if (!ctype_digit((string) $image['width']) || $image['width'] > 144) {
+                require_once 'Zend/Feed/Exception.php';
+                $message = 'Invalid parameter: parameter \'width\''
+                . ' must be an integer not exceeding 144';
+                $exception = new Zend_Feed_Exception($message);
+                if (!$this->_ignoreExceptions) {
+                    throw $exception;
+                } else {
+                    $this->_exceptions[] = $exception;
+                    return;
+                }
+            }
+            $width = $dom->createElement('width');
+            $text = $dom->createTextNode($image['width']);
+            $width->appendChild($text);
+            $img->appendChild($width);
+        }
+        if (isset($image['description'])) {
+            if (empty($image['description']) || !is_string($image['description'])) {
+                require_once 'Zend/Feed/Exception.php';
+                $message = 'Invalid parameter: parameter \'description\''
+                . ' must be a non-empty string';
+                $exception = new Zend_Feed_Exception($message);
+                if (!$this->_ignoreExceptions) {
+                    throw $exception;
+                } else {
+                    $this->_exceptions[] = $exception;
+                    return;
+                }
+            }
+            $desc = $dom->createElement('description');
+            $text = $dom->createTextNode($image['description']);
+            $desc->appendChild($text);
+            $img->appendChild($desc);
+        }
+    }
+
     /**
      * Set date feed was created
-     * 
-     * @param DOMDocument $dom 
-     * @param DOMElement $root 
+     *
+     * @param DOMDocument $dom
+     * @param DOMElement $root
      * @return void
      */
     protected function _setDateCreated(DOMDocument $dom, DOMElement $root)
@@ -331,12 +441,33 @@ class Zend_Feed_Writer_Renderer_Feed_Rss
             );
         }
     }
-    
+
+    /**
+     * Set date feed last build date
+     *
+     * @param DOMDocument $dom
+     * @param DOMElement $root
+     * @return void
+     */
+    protected function _setLastBuildDate(DOMDocument $dom, DOMElement $root)
+    {
+        if(!$this->getDataContainer()->getLastBuildDate()) {
+            return;
+        }
+
+        $lastBuildDate = $dom->createElement('lastBuildDate');
+        $root->appendChild($lastBuildDate);
+        $text = $dom->createTextNode(
+            $this->getDataContainer()->getLastBuildDate()->get(Zend_Date::RSS)
+        );
+        $lastBuildDate->appendChild($text);
+    }
+
     /**
      * Set base URL to feed links
-     * 
-     * @param DOMDocument $dom 
-     * @param DOMElement $root 
+     *
+     * @param DOMDocument $dom
+     * @param DOMElement $root
      * @return void
      */
     protected function _setBaseUrl(DOMDocument $dom, DOMElement $root)
@@ -347,12 +478,12 @@ class Zend_Feed_Writer_Renderer_Feed_Rss
         }
         $root->setAttribute('xml:base', $baseUrl);
     }
-    
+
     /**
      * Set feed categories
-     * 
-     * @param DOMDocument $dom 
-     * @param DOMElement $root 
+     *
+     * @param DOMDocument $dom
+     * @param DOMElement $root
      * @return void
      */
     protected function _setCategories(DOMDocument $dom, DOMElement $root)
