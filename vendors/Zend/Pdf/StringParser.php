@@ -148,7 +148,7 @@ class Zend_Pdf_StringParser
     {
         if ($skipComment) {
             while (true) {
-                $this->offset += strspn($this->data, "\x00\t\n\f\r ", $this->offset);
+                $this->offset += strspn($this->data, "\x00\t\n\x0C\r ", $this->offset);
 
                 if ($this->offset < strlen($this->data)  &&  $this->data[$this->offset] == '%') {
                     // Skip comment
@@ -159,13 +159,13 @@ class Zend_Pdf_StringParser
                 }
             }
         } else {
-            $this->offset += strspn($this->data, "\x00\t\n\f\r ", $this->offset);
+            $this->offset += strspn($this->data, "\x00\t\n\x0C\r ", $this->offset);
         }
 
 //        /** Original (non-optimized) implementation. */
 //
 //        while ($this->offset < strlen($this->data)) {
-//            if (strpos("\x00\t\n\f\r ", $this->data[$this->offset]) !== false) {
+//            if (strpos("\x00\t\n\x0C\r ", $this->data[$this->offset]) !== false) {
 //                $this->offset++;
 //            } else if (ord($this->data[$this->offset]) == 0x25 && $skipComment) { // '%'
 //                $this->skipComment();
@@ -231,7 +231,7 @@ class Zend_Pdf_StringParser
     {
         // $this->skipWhiteSpace();
         while (true) {
-            $this->offset += strspn($this->data, "\x00\t\n\f\r ", $this->offset);
+            $this->offset += strspn($this->data, "\x00\t\n\x0C\r ", $this->offset);
 
             if ($this->offset < strlen($this->data)  &&  $this->data[$this->offset] == '%') {
                 $this->offset += strcspn($this->data, "\r\n", $this->offset);
@@ -266,7 +266,7 @@ class Zend_Pdf_StringParser
             $start = $this->offset;
             $compare = '';
             if( version_compare( phpversion(), '5.2.5' ) >= 0) {
-                $compare = "()<>[]{}/%\x00\t\n\f\r ";
+                $compare = "()<>[]{}/%\x00\t\n\x0C\r ";
             } else {
                 $compare = "()<>[]{}/%\x00\t\n\r ";
             }
@@ -405,7 +405,7 @@ class Zend_Pdf_StringParser
     {
         $start = $this->offset;
 
-        $this->offset += strspn($this->data, "\x00\t\n\f\r 0123456789abcdefABCDEF", $this->offset);
+        $this->offset += strspn($this->data, "\x00\t\n\x0C\r 0123456789abcdefABCDEF", $this->offset);
 
         if ($this->offset >= strlen($this->data) - 1) {
             require_once 'Zend/Pdf/Exception.php';
