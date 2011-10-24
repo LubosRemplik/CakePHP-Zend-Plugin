@@ -1,13 +1,31 @@
 <?php
-
-class ZendComponent extends Object {
-	public $controller;
-	
-	function initialize(&$controller, $settings = array()) {
-        $this->controller = $controller;
-    }
+/**
+ * Zend Component 
+ **/
+class ZendComponent extends Component {
     
-	function import($key) {
+    public $components = array();
+
+    function __construct(ComponentCollection $collection, $settings = array()) {
+        parent::__construct($collection, $settings);
+    }
+
+    public function initialize($controller) {
+    }
+
+    public function startup($controller) {
+    }
+
+    public function beforeRender($controller) {
+    }
+
+    public function shutdown($controller) {
+    }
+
+    public function beforeRedirect($controller, $url, $status=null, $exit=true) {
+    }
+	
+	public function import($key) {
 		$this->__setIncludePath();
 		App::import('Vendor', $key, array(
 			'file' => 'Zend' . DS . str_replace(DS, '/', $key) . '.php',
