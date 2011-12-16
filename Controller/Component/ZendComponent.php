@@ -27,16 +27,15 @@ class ZendComponent extends Component {
 	
 	public function import($key) {
 		$this->__setIncludePath();
-		App::import('Vendor', $key, array(
+		App::import('Vendor', "Zend.$key", array(
 			'file' => 'Zend' . DS . str_replace(DS, '/', $key) . '.php',
-			'plugin' => 'Zend'
 		));
 	}
 	
 	private function __setIncludePath() {
 		$separator = PATH_SEPARATOR; 
         $includePath = explode($separator, ini_get("include_path"));
-        $includePath[] = dirname(dirname(dirname(__FILE__))) . DS . 'vendors' . DS;
+        $includePath[] = dirname(dirname(dirname(__FILE__))) . DS . 'Vendor' . DS;
         ini_set("include_path", implode($separator, $includePath));
 	}
 }
